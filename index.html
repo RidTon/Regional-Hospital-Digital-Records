@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Regional Hospital Digital Records</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f8fa;
+    --surface: #ffffff;
+    --ink: #14232c;
+    --muted: #506673;
+    --line: #d3dde3;
+    --line-strong: #9db1bd;
+    --brand: #0b5c7a;
+    --brand-ink: #ffffff;
+    --tint: #e3eff4;
+    --pas: #2f7aa6;
+    --lab: #6b8528;
+    --rad: #7454a0;
+    --pha: #a8741f;
+    --serif: "Newsreader", Georgia, "Times New Roman", serif;
+    --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1a21;
+      --surface: #15252e;
+      --ink: #e5edf1;
+      --muted: #9db1bd;
+      --line: #293c47;
+      --line-strong: #4b6372;
+      --brand: #62bfe0;
+      --brand-ink: #0e1a21;
+      --tint: #14303b;
+      --pas: #6cb2d8;
+      --lab: #a6c65a;
+      --rad: #b394dc;
+      --pha: #d9a95a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1a21;
+    --surface: #15252e;
+    --ink: #e5edf1;
+    --muted: #9db1bd;
+    --line: #293c47;
+    --line-strong: #4b6372;
+    --brand: #62bfe0;
+    --brand-ink: #0e1a21;
+    --tint: #14303b;
+    --pas: #6cb2d8;
+    --lab: #a6c65a;
+    --rad: #b394dc;
+    --pha: #d9a95a;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+  a { color: var(--brand); }
+  :focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; border-radius: 3px; }
+
+  .skip { position: absolute; left: -999px; top: 0; background: var(--brand); color: var(--brand-ink); padding: .5rem 1rem; z-index: 10; }
+  .skip:focus { left: 0; }
+
+  .demo-bar {
+    background: var(--tint);
+    border-bottom: 1px solid var(--line);
+    padding: .55rem 1.25rem;
+    font-size: .88rem;
+  }
+
+  .shell { display: grid; grid-template-columns: 270px minmax(0, 1fr); min-height: 100vh; }
+
+  /* Sidebar */
+  .side {
+    border-right: 1px solid var(--line);
+    padding: 1.75rem 1.25rem;
+    position: sticky;
+    top: 0;
+    align-self: start;
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+  .side .site-name { font-family: var(--serif); font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0; }
+  .side .site-meta { margin: .35rem 0 1.5rem; color: var(--muted); font-size: .85rem; }
+  .nav { list-style: none; margin: 0; padding: 0; }
+  .nav > li { margin: 0 0 .15rem; }
+  .nav-link, .nav-off {
+    display: grid; grid-template-columns: 1.6rem 1fr; gap: .25rem;
+    padding: .45rem .5rem; border-radius: 6px; text-decoration: none; font-size: .92rem; line-height: 1.35;
+  }
+  .nav-link { color: var(--ink); font-weight: 600; background: var(--tint); }
+  .nav-off { color: var(--muted); }
+  .nav-num { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .subnav { list-style: none; margin: .2rem 0 .6rem 2.1rem; padding: 0 0 0 .75rem; border-left: 2px solid var(--line); }
+  .subnav a { display: block; padding: .15rem 0; color: var(--muted); text-decoration: none; font-size: .88rem; }
+  .subnav a:hover { color: var(--brand); }
+  .tag-todo { font-size: .72rem; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 .45rem; margin-left: .35rem; white-space: nowrap; }
+
+  /* Main */
+  main { padding: 2.5rem clamp(1.25rem, 4vw, 3.5rem) 4rem; min-width: 0; }
+  .inner { max-width: 60rem; }
+
+  .hero h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(2.3rem, 5.4vw, 3.8rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0 0 .6rem;
+    max-width: 16ch;
+  }
+  .hero .page-title { margin: 0 0 1rem; color: var(--muted); font-size: 1rem; }
+  .hero .lead { font-family: var(--serif); font-size: 1.4rem; line-height: 1.45; max-width: 38rem; margin: 0 0 1.75rem; }
+
+  .merge { width: 100%; max-width: 44rem; height: auto; display: block; margin: 0 0 2rem; }
+  .merge text { font-family: var(--sans); font-size: 13px; fill: var(--ink); }
+  .flow { fill: none; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 1; }
+  .flow.pas { stroke: var(--pas); }
+  .flow.lab { stroke: var(--lab); }
+  .flow.rad { stroke: var(--rad); }
+  .flow.pha { stroke: var(--pha); }
+  .flow.merged { stroke: var(--brand); stroke-width: 9; }
+  .ehr-node { fill: var(--brand); }
+  @media (prefers-reduced-motion: no-preference) {
+    .flow { animation: draw 1.4s ease-out .2s both; }
+    .flow.merged { animation-delay: 1.3s; animation-duration: .8s; }
+    .ehr-node { animation: pop .3s ease-out 2s both; }
+  }
+  @keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes pop { from { opacity: 0; } to { opacity: 1; } }
+
+  .facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.25rem; border-top: 2px solid var(--ink); padding-top: 1rem; margin: 0; }
+  .facts dt { font-size: .85rem; color: var(--muted); margin: 0 0 .1rem; }
+  .facts dd { margin: 0; font-weight: 500; }
+
+  .ph { background: var(--tint); border-bottom: 1.5px dashed var(--muted); padding: 0 .3em; border-radius: 3px; }
+
+  section { margin-top: 3.5rem; scroll-margin-top: 1.5rem; }
+  h2 { font-family: var(--serif); font-weight: 600; font-size: 1.9rem; line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 1rem; }
+  h3 { font-size: 1.05rem; margin: 2rem 0 .6rem; }
+  p { margin: 0 0 1rem; max-width: 42rem; }
+
+  .rows { border-bottom: 1px solid var(--line); }
+  .row { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 1.25rem; padding: 1rem 0; border-top: 1px solid var(--line); }
+  .row h3 { margin: 0; font-size: .95rem; color: var(--muted); font-weight: 600; }
+  .row p { margin: 0 0 .6rem; }
+  .row p:last-child { margin-bottom: 0; }
+
+  .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+  .two h3 { margin-top: 0; }
+  ul.plain { margin: 0; padding-left: 1.15rem; }
+  ul.plain li { margin-bottom: .45rem; max-width: 34rem; }
+  ul.out li::marker { content: "✕  "; color: var(--muted); }
+  ul.in li::marker { content: "✓  "; color: var(--brand); }
+
+  .tbl-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; }
+  th, td { text-align: left; padding: .6rem .75rem .6rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { border-bottom: 2px solid var(--ink); font-weight: 600; }
+  td.ref, th.ref { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--muted); }
+
+  /* WBS */
+  .wbs-wrap { overflow-x: auto; padding: 1rem 0 .75rem; }
+  .wbs { min-width: 1120px; }
+  .wbs-root {
+    position: relative; width: max-content; margin: 0 auto;
+    padding: .7rem 1.5rem; background: var(--brand); color: var(--brand-ink);
+    border-radius: 6px; font-weight: 600;
+  }
+  .wbs-root::after { content: ""; position: absolute; left: 50%; top: 100%; height: 18px; border-left: 2px solid var(--line-strong); }
+  .wbs-phases { position: relative; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; margin-top: 18px; padding-top: 18px; }
+  .wbs-phases::before {
+    content: ""; position: absolute; top: 0;
+    left: calc((100% - 60px) / 14); right: calc((100% - 60px) / 14);
+    border-top: 2px solid var(--line-strong);
+  }
+  .phase-head {
+    position: relative; background: var(--tint); border-left: 4px solid var(--brand);
+    padding: .5rem .6rem; font-size: .85rem; font-weight: 600; line-height: 1.3; border-radius: 0 4px 4px 0;
+  }
+  .phase-head::before { content: ""; position: absolute; left: 50%; top: -18px; height: 18px; border-left: 2px solid var(--line-strong); }
+  .phase-head .code { display: block; color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .pkgs { list-style: none; margin: 8px 0 0 12px; padding: 0 0 0 10px; border-left: 2px solid var(--line-strong); }
+  .pkgs li {
+    position: relative; margin-top: 6px; padding: .4rem .55rem;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 4px; font-size: .8rem; line-height: 1.35;
+  }
+  .pkgs li::before { content: ""; position: absolute; left: -12px; top: 50%; width: 10px; border-top: 2px solid var(--line-strong); }
+  .pkgs .code { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: .25rem; }
+  .fig-note { color: var(--muted); font-size: .88rem; margin-top: .75rem; }
+
+  footer { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .88rem; }
+
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    .side { position: static; max-height: none; border-right: 0; border-bottom: 1px solid var(--line); }
+    .subnav { display: flex; flex-wrap: wrap; gap: .25rem 1rem; margin-left: 2.1rem; border-left: 0; padding-left: 0; }
+    .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 640px) {
+    .row { grid-template-columns: 1fr; gap: .25rem; }
+    .two { grid-template-columns: 1fr; }
+    .hero .lead { font-size: 1.2rem; }
+  }
+
+  /* --- Section 2 additions --- */
+  :root { --crit: #b3372e; --ok: #0b5c7a; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --crit: #ff8f85; } }
+  :root[data-theme="dark"] { --crit: #ff8f85; }
+  .inner { max-width: 64rem; }
+  .nav-link { background: transparent; font-weight: 500; }
+  .nav-link[aria-current="true"] { background: var(--tint); font-weight: 600; }
+  .nav > li:not(.active) .subnav { display: none; }
+  article + article { margin-top: 6rem; padding-top: 3rem; border-top: 2px solid var(--ink); }
+  .sec-head h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(2rem, 4.6vw, 3.2rem); line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 .5rem; }
+  .sec-head .page-title { margin: 0 0 1.5rem; color: var(--muted); }
+  .facts .sub { color: var(--muted); font-weight: 400; font-size: .85rem; }
+  .gantt-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); margin-top: 1rem; }
+  svg.gantt { display: block; width: 100%; min-width: 760px; height: auto; }
+  .g-phase-row { fill: var(--tint); opacity: .7; }
+  .g-grid { stroke: var(--line); stroke-width: 1; }
+  .g-axis { stroke: var(--line-strong); stroke-width: 1; }
+  .g-mon, .g-year { font-family: var(--sans); fill: var(--muted); font-size: 10.5px; }
+  .g-year { font-weight: 600; fill: var(--ink); font-size: 11px; }
+  .g-lab { font-family: var(--sans); font-size: 11.5px; fill: var(--ink); }
+  .g-lab.b { font-weight: 600; }
+  .g-bar { fill: var(--brand); } .g-bar.c { fill: var(--crit); }
+  .g-sum { fill: var(--ink); }
+  .g-ms { fill: var(--ink); } .g-ms.c { fill: var(--crit); }
+  .g-link { fill: none; stroke: var(--line-strong); stroke-width: 1; }
+  .g-link.c { stroke: var(--crit); stroke-width: 1.3; }
+  .mk { fill: var(--line-strong); } .mk.c { fill: var(--crit); }
+  .legend { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; font-size: .85rem; color: var(--muted); margin-top: .6rem; }
+  .legend span { display: inline-flex; align-items: center; gap: .4rem; }
+  .lg { display: inline-block; }
+  .lg-crit { width: 18px; height: 8px; background: var(--crit); border-radius: 2px; }
+  .lg-bar { width: 18px; height: 8px; background: var(--brand); border-radius: 2px; }
+  .lg-sum { width: 18px; height: 6px; background: var(--ink); }
+  .lg-ms { width: 9px; height: 9px; background: var(--ink); transform: rotate(45deg); }
+  .lg-link { width: 18px; height: 0; border-top: 2px solid var(--line-strong); }
+  .tbl-scroll { max-height: 30rem; overflow: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+  table.sched { font-size: .82rem; min-width: 1000px; }
+  table.sched td.ind, table.sched td.ref { white-space: nowrap; }
+  table.sched th, table.sched td { padding: .35rem .6rem .35rem .6rem; }
+  table.sched thead th { position: sticky; top: 0; background: var(--surface); z-index: 1; }
+  table.sched td.ind { padding-left: 1.4rem; }
+  tr.sum td { background: var(--tint); font-weight: 600; }
+  tr.crit td { background: color-mix(in srgb, var(--crit) 10%, transparent); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.tot td { font-weight: 600; border-top: 2px solid var(--ink); }
+  .chain { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .3rem; margin: 1rem 0 1.25rem; }
+  .chip { display: inline-block; padding: .15rem .55rem; border-radius: 4px; background: var(--crit); color: var(--brand-ink); font-size: .85rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .arrow { color: var(--muted); }
+  .ex { font-family: var(--serif); font-size: 1.15rem; border-left: 4px solid var(--brand); padding-left: 1rem; margin: 1rem 0 1.5rem; }
+  .costbar { display: flex; height: 22px; border-radius: 4px; overflow: hidden; margin: 1.25rem 0 1rem; gap: 2px; }
+  .seg, .sw { background: var(--muted); }
+  .s-brand { background: var(--brand); } .s-pas { background: var(--pas); } .s-pha { background: var(--pha); }
+  .s-rad { background: var(--rad); } .s-lab { background: var(--lab); } .s-muted { background: var(--line-strong); }
+  .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: .5rem; }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="demo-bar">Draft: Sections 1 and 2 built. Text in <span class="ph">[brackets]</span> is a placeholder for your group to complete. Sections 3–6 will use this same layout.</div>
+
+<div class="shell">
+  <aside class="side" aria-label="Site navigation">
+    <p class="site-name">Regional Hospital Digital Records</p>
+    <p class="site-meta">Assessment 2 · Group <span class="ph">[XX]</span></p>
+    <nav>
+      <ul class="nav">
+        <li class="active" data-sec="s1">
+          <a class="nav-link" href="#s1" aria-current="true"><span class="nav-num">1</span><span>Overview, charter &amp; scope</span></a>
+          <ul class="subnav">
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#charter">Charter</a></li>
+            <li><a href="#scope">Scope</a></li>
+            <li><a href="#wbs">Work breakdown</a></li>
+          </ul>
+        </li>
+        <li data-sec="s2">
+          <a class="nav-link" href="#s2"><span class="nav-num">2</span><span>Schedule, cost &amp; resources</span></a>
+          <ul class="subnav">
+            <li><a href="#schedule">Schedule</a></li>
+            <li><a href="#milestones">Milestones</a></li>
+            <li><a href="#critical">Critical path</a></li>
+            <li><a href="#cost">Cost and resources</a></li>
+          </ul>
+        </li>
+        <li><span class="nav-off"><span class="nav-num">3</span><span>Risk, stakeholders &amp; communication <span class="tag-todo">to build</span></span></span></li>
+        <li><span class="nav-off"><span class="nav-num">4</span><span>Quality, change &amp; team <span class="tag-todo">to build</span></span></span></li>
+        <li><span class="nav-off"><span class="nav-num">5</span><span>Tracking &amp; dashboard <span class="tag-todo">to build</span></span></span></li>
+        <li><span class="nav-off"><span class="nav-num">6</span><span>Integration &amp; recommendation <span class="tag-todo">to build</span></span></span></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main id="main">
+    <div class="inner">
+      <article id="s1">
+
+      <header class="hero">
+        <h1>Regional Hospital Digital Records</h1>
+        <p class="page-title">Project overview, charter and scope</p>
+        <p class="lead">Replacing several legacy clinical systems with one integrated electronic health record, site by site, without interrupting patient care.</p>
+
+        <svg class="merge" viewBox="0 0 640 200" role="img" aria-label="Four legacy systems, patient administration, laboratory, radiology imaging and pharmacy, converge into one integrated electronic health record">
+          <path class="flow pas" pathLength="1" d="M20 34 C250 34 300 108 470 108"/>
+          <path class="flow lab" pathLength="1" d="M20 84 C250 84 300 108 470 108"/>
+          <path class="flow rad" pathLength="1" d="M20 134 C250 134 300 108 470 108"/>
+          <path class="flow pha" pathLength="1" d="M20 184 C250 184 300 108 470 108"/>
+          <path class="flow merged" pathLength="1" d="M470 108 L590 108"/>
+          <circle class="ehr-node" cx="590" cy="108" r="15"/>
+          <text x="20" y="24">Patient administration</text>
+          <text x="20" y="74">Laboratory</text>
+          <text x="20" y="124">Radiology imaging</text>
+          <text x="20" y="174">Pharmacy</text>
+          <text x="632" y="146" text-anchor="end">Integrated EHR</text>
+        </svg>
+
+        <dl class="facts">
+          <div><dt>Organisation</dt><dd>Regional Hospital Network (RHN)</dd></div>
+          <div><dt>Sponsor</dt><dd><span class="ph">[Sponsor name, title]</span></dd></div>
+          <div><dt>Project manager</dt><dd><span class="ph">[PM name]</span></dd></div>
+          <div><dt>Approach</dt><dd>Hybrid</dd></div>
+        </dl>
+      </header>
+
+      <section id="overview">
+        <h2>Overview</h2>
+        <div class="rows">
+          <div class="row">
+            <h3>Context</h3>
+            <p>The Regional Hospital Network runs several legacy clinical systems, including patient administration, laboratory, radiology and pharmacy. They differ from site to site and do not share one patient record.</p>
+          </div>
+          <div class="row">
+            <h3>Problem</h3>
+            <p>Clinicians switch between systems and chase information across sites. That slows care, raises the risk of identification and medication errors, and makes reporting and audits manual. The legacy systems are also costly and increasingly hard to support.</p>
+          </div>
+          <div class="row">
+            <h3>Solution</h3>
+            <p>Replace them with one integrated electronic health record (EHR) platform. Migrate active patient records, redesign clinical workflows with clinicians, train staff, then go live site by site with a downtime fallback plan.</p>
+          </div>
+          <div class="row">
+            <h3>Purpose</h3>
+            <p>Give clinicians one secure, complete patient record at every site, improving patient safety and continuity of care.</p>
+          </div>
+          <div class="row">
+            <h3>Development approach</h3>
+            <p><strong>Hybrid.</strong> Vendor selection, data migration, safety and privacy assurance and site go-lives follow fixed gates, which suits a predictive plan. Workflow configuration benefits from short sprints with clinician feedback, which suits agile.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="charter">
+        <h2>Charter summary</h2>
+
+        <h3>Major objectives</h3>
+        <ul class="plain">
+          <li><strong>O1</strong> Replace the legacy clinical systems with one integrated EHR at every site.</li>
+          <li><strong>O2</strong> Migrate active patient records accurately and completely.</li>
+          <li><strong>O3</strong> Go live at every site on the baselined schedule and within the approved budget.</li>
+          <li><strong>O4</strong> Meet clinical safety, privacy and regulatory requirements at every gate.</li>
+          <li><strong>O5</strong> Prepare clinical staff before their site goes live.</li>
+        </ul>
+
+        <h3>Major deliverables</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Deliverable</th><th class="ref">WBS packages</th></tr></thead>
+            <tbody>
+              <tr><td>Project charter, scope baseline and governance framework</td><td class="ref">1.1 – 1.2</td></tr>
+              <tr><td>Requirements, clinical workflow designs, selected vendor and integration architecture</td><td class="ref">2.1 – 2.3</td></tr>
+              <tr><td>Configured EHR platform with interfaces to laboratory, imaging and pharmacy</td><td class="ref">3.1 – 3.2</td></tr>
+              <tr><td>Migrated and reconciled patient records</td><td class="ref">4.1 – 4.2</td></tr>
+              <tr><td>Tested, clinically safe and privacy-assured system</td><td class="ref">5.1 – 5.2</td></tr>
+              <tr><td>Trained clinical staff, super-user network and communications</td><td class="ref">6.1 – 6.2</td></tr>
+              <tr><td>Live sites, hypercare support and closure report</td><td class="ref">7.1 – 7.2</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Success criteria</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Criterion</th><th>Target</th><th class="ref">Objective</th></tr></thead>
+            <tbody>
+              <tr><td>System replacement</td><td>One EHR live at every site and the targeted legacy systems retired</td><td class="ref">O1</td></tr>
+              <tr><td>Data accuracy</td><td>At least 99.9% of critical fields (identity, allergies, medications) match source records</td><td class="ref">O2</td></tr>
+              <tr><td>Schedule</td><td>All sites live within 5% of the baselined duration</td><td class="ref">O3</td></tr>
+              <tr><td>Budget</td><td>Final cost within 10% of the approved baseline</td><td class="ref">O3</td></tr>
+              <tr><td>Safety and privacy</td><td>No critical clinical safety hazard open at go-live and the privacy assessment passed</td><td class="ref">O4</td></tr>
+              <tr><td>Readiness</td><td>All affected clinical staff trained and assessed before their site's go-live</td><td class="ref">O5</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="scope">
+        <h2>Scope</h2>
+        <div class="two">
+          <div>
+            <h3>In scope</h3>
+            <ul class="plain in">
+              <li>Configuring one integrated EHR platform for all RHN sites</li>
+              <li>Migrating active patient records from the legacy systems</li>
+              <li>Interfaces to laboratory, imaging and pharmacy systems</li>
+              <li>Clinical workflow redesign, testing, and safety and privacy assessment</li>
+              <li>Clinician training and super-user support</li>
+              <li>Staged site go-lives, hypercare and closure</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Out of scope</h3>
+            <ul class="plain out">
+              <li>New clinical services or building works</li>
+              <li>Replacing medical devices, except where needed for integration</li>
+              <li>Digitising historical paper archives</li>
+              <li>Network upgrades, handled by the IT infrastructure programme</li>
+              <li>A patient-facing portal or mobile app, planned as a later phase</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="two" style="margin-top:2rem">
+          <div>
+            <h3>Assumptions</h3>
+            <ul class="plain">
+              <li>Funding and executive sponsorship are confirmed before planning starts.</li>
+              <li>Clinical leads can release staff for design, testing and training.</li>
+              <li>Legacy data can be extracted in a usable form.</li>
+              <li>The chosen vendor can supply specialists on time.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Constraints</h3>
+            <ul class="plain">
+              <li>Patient safety comes first, so go-lives avoid peak clinical periods and need a downtime fallback.</li>
+              <li>Patient data must meet applicable health privacy regulations.</li>
+              <li>The sponsor sets a fixed budget envelope.</li>
+              <li>Clinical staff are shared with live patient care.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="wbs">
+        <h2>Work breakdown structure</h2>
+        <p>Every deliverable is split into work packages. These WBS codes carry into the ProjectLibre schedule in Section 2 and the Trello card labels in Section 5, which is how scope stays connected to planning and tracking.</p>
+
+        <div class="wbs-wrap" role="group" aria-label="Work breakdown structure diagram" tabindex="0">
+          <div class="wbs">
+            <div class="wbs-root">Regional Hospital Digital Records</div>
+            <div class="wbs-phases">
+              <div>
+                <div class="phase-head"><span class="code">1.0</span>Initiation &amp; governance</div>
+                <ul class="pkgs">
+                  <li><span class="code">1.1</span>Charter and scope baseline</li>
+                  <li><span class="code">1.2</span>Governance and clinical safety board</li>
+                </ul>
+              </div>
+              <div>
+                <div class="phase-head"><span class="code">2.0</span>Requirements &amp; design</div>
+                <ul class="pkgs">
+                  <li><span class="code">2.1</span>Requirements and workflow design</li>
+                  <li><span class="code">2.2</span>Vendor selection and contract</li>
+                  <li><span class="code">2.3</span>Integration architecture</li>
+                </ul>
+              </div>
+              <div>
+                <div class="phase-head"><span class="code">3.0</span>Platform build</div>
+                <ul class="pkgs">
+                  <li><span class="code">3.1</span>Core EHR configuration</li>
+                  <li><span class="code">3.2</span>Lab, imaging and pharmacy interfaces</li>
+                </ul>
+              </div>
+              <div>
+                <div class="phase-head"><span class="code">4.0</span>Data migration</div>
+                <ul class="pkgs">
+                  <li><span class="code">4.1</span>Data mapping and cleansing</li>
+                  <li><span class="code">4.2</span>Trial migrations and reconciliation</li>
+                </ul>
+              </div>
+              <div>
+                <div class="phase-head"><span class="code">5.0</span>Testing &amp; assurance</div>
+                <ul class="pkgs">
+                  <li><span class="code">5.1</span>System and user acceptance testing</li>
+                  <li><span class="code">5.2</span>Clinical safety and privacy assessment</li>
+                </ul>
+              </div>
+              <div>
+                <div class="phase-head"><span class="code">6.0</span>Training &amp; readiness</div>
+                <ul class="pkgs">
+                  <li><span class="code">6.1</span>Clinical training delivery</li>
+                  <li><span class="code">6.2</span>Super-users and communications</li>
+                </ul>
+              </div>
+              <div>
+                <div class="phase-head"><span class="code">7.0</span>Go-live &amp; closure</div>
+                <ul class="pkgs">
+                  <li><span class="code">7.1</span>Staged site go-lives</li>
+                  <li><span class="code">7.2</span>Hypercare and closure</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="fig-note">Figure 1. Illustrative WBS. To be replaced by the group's draw.io export and aligned to the final schedule.</p>
+      </section>
+
+      </article>
+
+      <article id="s2">
+      <header class="sec-head">
+        <h1>Schedule, cost and resources</h1>
+        <p class="page-title">Section 2 · baseline schedule built in ProjectLibre, costs and resources in Excel</p>
+        <dl class="facts">
+          <div><dt>Duration</dt><dd>330 working days<br><span class="sub">5 Oct 2026 to 7 Jan 2028</span></dd></div>
+          <div><dt>Baseline cost</dt><dd>$5,758,300</dd></div>
+          <div><dt>Budget with 10% contingency</dt><dd>$6,334,130</dd></div>
+          <div><dt>Critical tasks</dt><dd>13 of 20</dd></div>
+        </dl>
+      </header>
+
+      <section id="schedule">
+        <h2>Schedule</h2>
+        <p>The schedule turns the WBS into 7 summary phases, 20 tasks and 6 milestones. Where a work package splits into several activities the code extends, so 7.1 becomes 7.1.1 to 7.1.3. All links are finish-to-start on a Monday to Friday calendar.</p>
+
+        <div class="gantt-wrap" role="group" aria-label="Gantt chart" tabindex="0"><svg class="gantt" viewBox="0 0 1060 776" role="img" aria-label="Gantt chart of the baseline schedule from 5 October 2026 to 7 January 2028, with the critical path highlighted">
+<defs><marker id="arr" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="mk" d="M0 0 L8 4 L0 8 z"/></marker><marker id="arrc" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="mk c" d="M0 0 L8 4 L0 8 z"/></marker></defs>
+<rect class="g-phase-row" x="0" y="42" width="1060" height="22"/>
+<rect class="g-phase-row" x="0" y="130" width="1060" height="22"/>
+<rect class="g-phase-row" x="0" y="240" width="1060" height="22"/>
+<rect class="g-phase-row" x="0" y="306" width="1060" height="22"/>
+<rect class="g-phase-row" x="0" y="372" width="1060" height="22"/>
+<rect class="g-phase-row" x="0" y="460" width="1060" height="22"/>
+<rect class="g-phase-row" x="0" y="548" width="1060" height="22"/>
+<line class="g-grid" x1="310.0" y1="28" x2="310.0" y2="768"/>
+<text class="g-mon" x="332.0" y="38" text-anchor="middle">O</text>
+<text class="g-year" x="313.0" y="18">2026</text>
+<line class="g-grid" x1="354.0" y1="28" x2="354.0" y2="768"/>
+<text class="g-mon" x="377.1" y="38" text-anchor="middle">N</text>
+<line class="g-grid" x1="400.2" y1="28" x2="400.2" y2="768"/>
+<text class="g-mon" x="425.5" y="38" text-anchor="middle">D</text>
+<line class="g-grid" x1="450.8" y1="28" x2="450.8" y2="768"/>
+<text class="g-mon" x="473.9" y="38" text-anchor="middle">J</text>
+<text class="g-year" x="453.8" y="18">2027</text>
+<line class="g-grid" x1="497.0" y1="28" x2="497.0" y2="768"/>
+<text class="g-mon" x="519.0" y="38" text-anchor="middle">F</text>
+<line class="g-grid" x1="541.0" y1="28" x2="541.0" y2="768"/>
+<text class="g-mon" x="566.3" y="38" text-anchor="middle">M</text>
+<line class="g-grid" x1="591.6" y1="28" x2="591.6" y2="768"/>
+<text class="g-mon" x="615.8" y="38" text-anchor="middle">A</text>
+<line class="g-grid" x1="640.0" y1="28" x2="640.0" y2="768"/>
+<text class="g-mon" x="663.1" y="38" text-anchor="middle">M</text>
+<line class="g-grid" x1="686.2" y1="28" x2="686.2" y2="768"/>
+<text class="g-mon" x="710.4" y="38" text-anchor="middle">J</text>
+<line class="g-grid" x1="734.6" y1="28" x2="734.6" y2="768"/>
+<text class="g-mon" x="758.8" y="38" text-anchor="middle">J</text>
+<line class="g-grid" x1="783.0" y1="28" x2="783.0" y2="768"/>
+<text class="g-mon" x="807.2" y="38" text-anchor="middle">A</text>
+<line class="g-grid" x1="831.4" y1="28" x2="831.4" y2="768"/>
+<text class="g-mon" x="855.6" y="38" text-anchor="middle">S</text>
+<line class="g-grid" x1="879.8" y1="28" x2="879.8" y2="768"/>
+<text class="g-mon" x="902.9" y="38" text-anchor="middle">O</text>
+<line class="g-grid" x1="926.0" y1="28" x2="926.0" y2="768"/>
+<text class="g-mon" x="950.2" y="38" text-anchor="middle">N</text>
+<line class="g-grid" x1="974.4" y1="28" x2="974.4" y2="768"/>
+<text class="g-mon" x="999.7" y="38" text-anchor="middle">D</text>
+<line class="g-grid" x1="1025.0" y1="28" x2="1025.0" y2="768"/>
+<text class="g-mon" x="1030.5" y="38" text-anchor="middle">J</text>
+<text class="g-year" x="1028.0" y="18">2028</text>
+<line class="g-axis" x1="0" y1="42" x2="1060" y2="42"/>
+<path class="g-link c" d="M332.0 75.0 V91.0" marker-end="url(#arrc)"/>
+<path class="g-link c" d="M354.0 97.0 V113.0" marker-end="url(#arrc)"/>
+<path class="g-link c" d="M354.0 119.0 V157.0" marker-end="url(#arrc)"/>
+<path class="g-link c" d="M420.0 163.0 V179.0" marker-end="url(#arrc)"/>
+<path class="g-link" d="M420.0 163.0 V201.0" marker-end="url(#arr)"/>
+<path class="g-link c" d="M497.0 185.0 V223.0" marker-end="url(#arrc)"/>
+<path class="g-link c" d="M497.0 229.0 V267.0" marker-end="url(#arrc)"/>
+<path class="g-link" d="M497.0 229.0 V289.0" marker-end="url(#arr)"/>
+<path class="g-link" d="M464.0 207.0 V295.0 H496.0" marker-end="url(#arr)"/>
+<path class="g-link" d="M497.0 229.0 V333.0" marker-end="url(#arr)"/>
+<path class="g-link c" d="M607.0 273.0 V355.0" marker-end="url(#arrc)"/>
+<path class="g-link" d="M585.0 339.0 V361.0 H606.0" marker-end="url(#arr)"/>
+<path class="g-link" d="M596.0 295.0 V405.0 H683.0" marker-end="url(#arr)"/>
+<path class="g-link c" d="M684.0 361.0 V399.0" marker-end="url(#arrc)"/>
+<path class="g-link" d="M596.0 295.0 V421.0" marker-end="url(#arr)"/>
+<path class="g-link" d="M651.0 427.0 V449.0 H804.0" marker-end="url(#arr)"/>
+<path class="g-link" d="M805.0 493.0 V455.0" marker-end="url(#arr)"/>
+<path class="g-link c" d="M772.0 405.0 V487.0" marker-end="url(#arrc)"/>
+<path class="g-link" d="M673.0 537.0 V493.0 H771.0" marker-end="url(#arr)"/>
+<path class="g-link c" d="M805.0 493.0 V509.0" marker-end="url(#arrc)"/>
+<path class="g-link" d="M607.0 273.0 V531.0" marker-end="url(#arr)"/>
+<path class="g-link" d="M805.0 449.0 V575.0" marker-end="url(#arr)"/>
+<path class="g-link" d="M827.0 581.0 V597.0" marker-end="url(#arr)"/>
+<path class="g-link" d="M827.0 603.0 V619.0" marker-end="url(#arr)"/>
+<path class="g-link" d="M860.0 625.0 V647.0 H870.0" marker-end="url(#arr)"/>
+<path class="g-link c" d="M871.0 515.0 V641.0" marker-end="url(#arrc)"/>
+<path class="g-link c" d="M915.0 647.0 V663.0" marker-end="url(#arrc)"/>
+<path class="g-link c" d="M959.0 669.0 V685.0" marker-end="url(#arrc)"/>
+<path class="g-link c" d="M959.0 691.0 V707.0" marker-end="url(#arrc)"/>
+<path class="g-link c" d="M1014.0 713.0 V729.0" marker-end="url(#arrc)"/>
+<path class="g-link c" d="M1036.0 735.0 V751.0" marker-end="url(#arrc)"/>
+<text class="g-lab b" x="8" y="57.0">1.0  Initiation &amp; governance</text>
+<path class="g-sum" d="M310.0 48.0 H354.0 V56.0 L350.0 52.0 H314.0 L310.0 56.0 Z"/>
+<text class="g-lab" x="22" y="79.0">1.1  Charter and scope baseline</text>
+<rect class="g-bar c" x="310.0" y="69.0" width="22.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="101.0">1.2  Governance and clinical safety board</text>
+<rect class="g-bar c" x="332.0" y="91.0" width="22.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="123.0">M1  Project baseline approved</text>
+<path class="g-ms c" d="M354.0 113.0 L360.0 119.0 L354.0 125.0 L348.0 119.0 Z"/>
+<text class="g-lab b" x="8" y="145.0">2.0  Requirements &amp; design</text>
+<path class="g-sum" d="M354.0 136.0 H497.0 V144.0 L493.0 140.0 H358.0 L354.0 144.0 Z"/>
+<text class="g-lab" x="22" y="167.0">2.1  Requirements and workflow design</text>
+<rect class="g-bar c" x="354.0" y="157.0" width="66.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="189.0">2.2  Vendor selection and contract</text>
+<rect class="g-bar c" x="420.0" y="179.0" width="77.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="211.0">2.3  Integration architecture</text>
+<rect class="g-bar " x="420.0" y="201.0" width="44.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="233.0">M2  Vendor contract signed</text>
+<path class="g-ms c" d="M497.0 223.0 L503.0 229.0 L497.0 235.0 L491.0 229.0 Z"/>
+<text class="g-lab b" x="8" y="255.0">3.0  Platform build</text>
+<path class="g-sum" d="M497.0 246.0 H607.0 V254.0 L603.0 250.0 H501.0 L497.0 254.0 Z"/>
+<text class="g-lab" x="22" y="277.0">3.1  Core EHR configuration</text>
+<rect class="g-bar c" x="497.0" y="267.0" width="110.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="299.0">3.2  Lab, imaging and pharmacy interfaces</text>
+<rect class="g-bar " x="497.0" y="289.0" width="99.0" height="12" rx="2"/>
+<text class="g-lab b" x="8" y="321.0">4.0  Data migration</text>
+<path class="g-sum" d="M497.0 312.0 H684.0 V320.0 L680.0 316.0 H501.0 L497.0 320.0 Z"/>
+<text class="g-lab" x="22" y="343.0">4.1  Data mapping and cleansing</text>
+<rect class="g-bar " x="497.0" y="333.0" width="88.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="365.0">4.2  Trial migrations and reconciliation</text>
+<rect class="g-bar c" x="607.0" y="355.0" width="77.0" height="12" rx="2"/>
+<text class="g-lab b" x="8" y="387.0">5.0  Testing &amp; assurance</text>
+<path class="g-sum" d="M596.0 378.0 H805.0 V386.0 L801.0 382.0 H600.0 L596.0 386.0 Z"/>
+<text class="g-lab" x="22" y="409.0">5.1  System and user acceptance testing</text>
+<rect class="g-bar c" x="684.0" y="399.0" width="88.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="431.0">5.2  Clinical safety and privacy assessment</text>
+<rect class="g-bar " x="596.0" y="421.0" width="55.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="453.0">M3  Pilot go/no-go approved</text>
+<path class="g-ms " d="M805.0 443.0 L811.0 449.0 L805.0 455.0 L799.0 449.0 Z"/>
+<text class="g-lab b" x="8" y="475.0">6.0  Training &amp; readiness</text>
+<path class="g-sum" d="M607.0 466.0 H871.0 V474.0 L867.0 470.0 H611.0 L607.0 474.0 Z"/>
+<text class="g-lab" x="22" y="497.0">6.1.1  Clinical training - pilot site</text>
+<rect class="g-bar c" x="772.0" y="487.0" width="33.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="519.0">6.1.2  Clinical training - remaining sites</text>
+<rect class="g-bar c" x="805.0" y="509.0" width="66.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="541.0">6.2  Super-user network and communications</text>
+<rect class="g-bar " x="607.0" y="531.0" width="66.0" height="12" rx="2"/>
+<text class="g-lab b" x="8" y="563.0">7.0  Go-live &amp; closure</text>
+<path class="g-sum" d="M805.0 554.0 H1036.0 V562.0 L1032.0 558.0 H809.0 L805.0 562.0 Z"/>
+<text class="g-lab" x="22" y="585.0">7.1.1  Pilot site go-live</text>
+<rect class="g-bar " x="805.0" y="575.0" width="22.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="607.0">M4  Pilot site live</text>
+<path class="g-ms " d="M827.0 597.0 L833.0 603.0 L827.0 609.0 L821.0 603.0 Z"/>
+<text class="g-lab" x="22" y="629.0">7.2.1  Pilot hypercare and review</text>
+<rect class="g-bar " x="827.0" y="619.0" width="33.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="651.0">7.1.2  Wave 1 site go-lives</text>
+<rect class="g-bar c" x="871.0" y="641.0" width="44.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="673.0">7.1.3  Wave 2 site go-lives</text>
+<rect class="g-bar c" x="915.0" y="663.0" width="44.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="695.0">M5  All sites live</text>
+<path class="g-ms c" d="M959.0 685.0 L965.0 691.0 L959.0 697.0 L953.0 691.0 Z"/>
+<text class="g-lab" x="22" y="717.0">7.2.2  Hypercare - all sites</text>
+<rect class="g-bar c" x="959.0" y="707.0" width="55.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="739.0">7.2.3  Closure report and handover</text>
+<rect class="g-bar c" x="1014.0" y="729.0" width="22.0" height="12" rx="2"/>
+<text class="g-lab" x="22" y="761.0">M6  Project closed</text>
+<path class="g-ms c" d="M1036.0 751.0 L1042.0 757.0 L1036.0 763.0 L1030.0 757.0 Z"/>
+</svg></div>
+        <div class="legend"><span><i class="lg lg-crit"></i>Critical task</span><span><i class="lg lg-bar"></i>Non-critical task</span><span><i class="lg lg-sum"></i>Summary phase</span><span><i class="lg lg-ms"></i>Milestone</span><span><i class="lg lg-link"></i>Dependency</span></div>
+        <p class="fig-note">Figure 2. Baseline Gantt chart drawn from the same data as the ProjectLibre file. Replace with the ProjectLibre export for the evidence pack.</p>
+
+        <h3>Schedule table</h3>
+        <div class="tbl-scroll"><table class="sched"><thead><tr><th class="ref">ID</th><th class="ref">WBS</th><th>Task</th><th class="num">Days</th><th>Start</th><th>Finish</th><th>Pred.</th><th class="num">Slack</th><th>Resources</th><th class="num">Cost</th></tr></thead><tbody><tr class="sum"><td class="ref">1</td><td class="ref">1.0</td><td>Initiation &amp; governance</td><td class="num">20</td><td class="ref">5 Oct 2026</td><td class="ref">30 Oct 2026</td><td></td><td></td><td></td><td class="num">$27,800</td></tr>
+<tr class="crit"><td class="ref">2</td><td class="ref">1.1</td><td class="ind">Charter and scope baseline</td><td class="num">10</td><td class="ref">5 Oct 2026</td><td class="ref">16 Oct 2026</td><td class="ref"></td><td class="num">0</td><td class="ref">PM, CIL, BA</td><td class="num">$14,200</td></tr>
+<tr class="crit"><td class="ref">3</td><td class="ref">1.2</td><td class="ind">Governance and clinical safety board</td><td class="num">10</td><td class="ref">19 Oct 2026</td><td class="ref">30 Oct 2026</td><td class="ref">2</td><td class="num">0</td><td class="ref">PM, CSO, PSO</td><td class="num">$13,600</td></tr>
+<tr class="crit"><td class="ref">4</td><td class="ref">M1</td><td class="ind">Project baseline approved</td><td class="num">0</td><td class="ref"></td><td class="ref">30 Oct 2026</td><td class="ref">3</td><td class="num">0</td><td class="ref"></td><td class="num"></td></tr>
+<tr class="sum"><td class="ref">5</td><td class="ref">2.0</td><td>Requirements &amp; design</td><td class="num">65</td><td class="ref">2 Nov 2026</td><td class="ref">29 Jan 2027</td><td></td><td></td><td></td><td class="num">$259,900</td></tr>
+<tr class="crit"><td class="ref">6</td><td class="ref">2.1</td><td class="ind">Requirements and workflow design</td><td class="num">30</td><td class="ref">2 Nov 2026</td><td class="ref">11 Dec 2026</td><td class="ref">4</td><td class="num">0</td><td class="ref">BA, CIL, SU, PM</td><td class="num">$100,200</td></tr>
+<tr class="crit"><td class="ref">7</td><td class="ref">2.2</td><td class="ind">Vendor selection and contract</td><td class="num">35</td><td class="ref">14 Dec 2026</td><td class="ref">29 Jan 2027</td><td class="ref">6</td><td class="num">0</td><td class="ref">PM, CIL, BA</td><td class="num">$126,900</td></tr>
+<tr><td class="ref">8</td><td class="ref">2.3</td><td class="ind">Integration architecture</td><td class="num">20</td><td class="ref">14 Dec 2026</td><td class="ref">8 Jan 2027</td><td class="ref">6</td><td class="num">55</td><td class="ref">IE, BA, PSO</td><td class="num">$32,800</td></tr>
+<tr class="crit"><td class="ref">9</td><td class="ref">M2</td><td class="ind">Vendor contract signed</td><td class="num">0</td><td class="ref"></td><td class="ref">29 Jan 2027</td><td class="ref">7</td><td class="num">0</td><td class="ref"></td><td class="num"></td></tr>
+<tr class="sum"><td class="ref">10</td><td class="ref">3.0</td><td>Platform build</td><td class="num">50</td><td class="ref">1 Feb 2027</td><td class="ref">9 Apr 2027</td><td></td><td></td><td></td><td class="num">$2,540,000</td></tr>
+<tr class="crit"><td class="ref">11</td><td class="ref">3.1</td><td class="ind">Core EHR configuration</td><td class="num">50</td><td class="ref">1 Feb 2027</td><td class="ref">9 Apr 2027</td><td class="ref">9</td><td class="num">0</td><td class="ref">VC, CIL, BA, SU, PM</td><td class="num">$2,105,000</td></tr>
+<tr><td class="ref">12</td><td class="ref">3.2</td><td class="ind">Lab, imaging and pharmacy interfaces</td><td class="num">45</td><td class="ref">1 Feb 2027</td><td class="ref">2 Apr 2027</td><td class="ref">9, 8</td><td class="num">40</td><td class="ref">IE, VC, PSO</td><td class="num">$435,000</td></tr>
+<tr class="sum"><td class="ref">13</td><td class="ref">4.0</td><td>Data migration</td><td class="num">85</td><td class="ref">1 Feb 2027</td><td class="ref">28 May 2027</td><td></td><td></td><td></td><td class="num">$195,000</td></tr>
+<tr><td class="ref">14</td><td class="ref">4.1</td><td class="ind">Data mapping and cleansing</td><td class="num">40</td><td class="ref">1 Feb 2027</td><td class="ref">26 Mar 2027</td><td class="ref">9</td><td class="num">10</td><td class="ref">DM, BA, CIL</td><td class="num">$92,800</td></tr>
+<tr class="crit"><td class="ref">15</td><td class="ref">4.2</td><td class="ind">Trial migrations and reconciliation</td><td class="num">35</td><td class="ref">12 Apr 2027</td><td class="ref">28 May 2027</td><td class="ref">11, 14</td><td class="num">0</td><td class="ref">DM, QA, CIL, VC</td><td class="num">$102,200</td></tr>
+<tr class="sum"><td class="ref">16</td><td class="ref">5.0</td><td>Testing &amp; assurance</td><td class="num">95</td><td class="ref">5 Apr 2027</td><td class="ref">13 Aug 2027</td><td></td><td></td><td></td><td class="num">$208,000</td></tr>
+<tr class="crit"><td class="ref">17</td><td class="ref">5.1</td><td class="ind">System and user acceptance testing</td><td class="num">40</td><td class="ref">31 May 2027</td><td class="ref">23 Jul 2027</td><td class="ref">12, 15</td><td class="num">0</td><td class="ref">QA, BA, SU, VC</td><td class="num">$160,000</td></tr>
+<tr><td class="ref">18</td><td class="ref">5.2</td><td class="ind">Clinical safety and privacy assessment</td><td class="num">25</td><td class="ref">5 Apr 2027</td><td class="ref">7 May 2027</td><td class="ref">12</td><td class="num">75</td><td class="ref">CSO, PSO, QA</td><td class="num">$48,000</td></tr>
+<tr><td class="ref">19</td><td class="ref">M3</td><td class="ind">Pilot go/no-go approved</td><td class="num">0</td><td class="ref"></td><td class="ref">13 Aug 2027</td><td class="ref">18, 21</td><td class="num">5</td><td class="ref"></td><td class="num"></td></tr>
+<tr class="sum"><td class="ref">20</td><td class="ref">6.0</td><td>Training &amp; readiness</td><td class="num">120</td><td class="ref">12 Apr 2027</td><td class="ref">24 Sep 2027</td><td></td><td></td><td></td><td class="num">$314,600</td></tr>
+<tr class="crit"><td class="ref">21</td><td class="ref">6.1.1</td><td class="ind">Clinical training - pilot site</td><td class="num">15</td><td class="ref">26 Jul 2027</td><td class="ref">13 Aug 2027</td><td class="ref">17, 23</td><td class="num">0</td><td class="ref">TS, SU, CIL</td><td class="num">$87,800</td></tr>
+<tr class="crit"><td class="ref">22</td><td class="ref">6.1.2</td><td class="ind">Clinical training - remaining sites</td><td class="num">30</td><td class="ref">16 Aug 2027</td><td class="ref">24 Sep 2027</td><td class="ref">21</td><td class="num">0</td><td class="ref">TS, SU, CIL</td><td class="num">$168,000</td></tr>
+<tr><td class="ref">23</td><td class="ref">6.2</td><td class="ind">Super-user network and communications</td><td class="num">30</td><td class="ref">12 Apr 2027</td><td class="ref">21 May 2027</td><td class="ref">11</td><td class="num">45</td><td class="ref">TS, SU, CIL</td><td class="num">$58,800</td></tr>
+<tr class="sum"><td class="ref">24</td><td class="ref">7.0</td><td>Go-live &amp; closure</td><td class="num">105</td><td class="ref">16 Aug 2027</td><td class="ref">7 Jan 2028</td><td></td><td></td><td></td><td class="num">$2,213,000</td></tr>
+<tr><td class="ref">25</td><td class="ref">7.1.1</td><td class="ind">Pilot site go-live</td><td class="num">10</td><td class="ref">16 Aug 2027</td><td class="ref">27 Aug 2027</td><td class="ref">19</td><td class="num">5</td><td class="ref">PM, VC, IE, DM, TS, SU, CIL, QA</td><td class="num">$252,000</td></tr>
+<tr><td class="ref">26</td><td class="ref">M4</td><td class="ind">Pilot site live</td><td class="num">0</td><td class="ref"></td><td class="ref">27 Aug 2027</td><td class="ref">25</td><td class="num">5</td><td class="ref"></td><td class="num"></td></tr>
+<tr><td class="ref">27</td><td class="ref">7.2.1</td><td class="ind">Pilot hypercare and review</td><td class="num">15</td><td class="ref">30 Aug 2027</td><td class="ref">17 Sep 2027</td><td class="ref">26</td><td class="num">5</td><td class="ref">VC, TS, SU, IE, CIL, PM</td><td class="num">$89,700</td></tr>
+<tr class="crit"><td class="ref">28</td><td class="ref">7.1.2</td><td class="ind">Wave 1 site go-lives</td><td class="num">20</td><td class="ref">27 Sep 2027</td><td class="ref">22 Oct 2027</td><td class="ref">27, 22</td><td class="num">0</td><td class="ref">PM, VC, IE, DM, TS, SU, CIL, QA</td><td class="num">$888,800</td></tr>
+<tr class="crit"><td class="ref">29</td><td class="ref">7.1.3</td><td class="ind">Wave 2 site go-lives</td><td class="num">20</td><td class="ref">25 Oct 2027</td><td class="ref">19 Nov 2027</td><td class="ref">28</td><td class="num">0</td><td class="ref">PM, VC, IE, DM, TS, SU, CIL, QA</td><td class="num">$738,800</td></tr>
+<tr class="crit"><td class="ref">30</td><td class="ref">M5</td><td class="ind">All sites live</td><td class="num">0</td><td class="ref"></td><td class="ref">19 Nov 2027</td><td class="ref">29</td><td class="num">0</td><td class="ref"></td><td class="num"></td></tr>
+<tr class="crit"><td class="ref">31</td><td class="ref">7.2.2</td><td class="ind">Hypercare - all sites</td><td class="num">25</td><td class="ref">22 Nov 2027</td><td class="ref">24 Dec 2027</td><td class="ref">30</td><td class="num">0</td><td class="ref">VC, TS, SU, IE, CIL, PM</td><td class="num">$226,500</td></tr>
+<tr class="crit"><td class="ref">32</td><td class="ref">7.2.3</td><td class="ind">Closure report and handover</td><td class="num">10</td><td class="ref">27 Dec 2027</td><td class="ref">7 Jan 2028</td><td class="ref">31</td><td class="num">0</td><td class="ref">PM, BA, CIL</td><td class="num">$17,200</td></tr>
+<tr class="crit"><td class="ref">33</td><td class="ref">M6</td><td class="ind">Project closed</td><td class="num">0</td><td class="ref"></td><td class="ref">7 Jan 2028</td><td class="ref">32</td><td class="num">0</td><td class="ref"></td><td class="num"></td></tr></tbody></table></div>
+        <p class="fig-note">Table 1. Baseline schedule. Shaded rows are critical. Slack is in working days. Resource codes are explained in Table 4.</p>
+      </section>
+
+      <section id="milestones">
+        <h2>Milestones</h2>
+        <div class="tbl-wrap"><table><thead><tr><th class="ref">Ref</th><th>Milestone</th><th>Date</th><th>What it shows</th></tr></thead><tbody><tr class=crit><td class="ref">M1</td><td>Project baseline approved</td><td class="ref">30 Oct 2026</td><td>Charter, scope, schedule and budget baselined; governance in place.</td></tr><tr class=crit><td class="ref">M2</td><td>Vendor contract signed</td><td class="ref">29 Jan 2027</td><td>Contract commits licence spend and unlocks configuration and data work.</td></tr><tr><td class="ref">M3</td><td>Pilot go/no-go approved</td><td class="ref">13 Aug 2027</td><td>Safety, privacy, testing and training evidence reviewed before the first site goes live.</td></tr><tr><td class="ref">M4</td><td>Pilot site live</td><td class="ref">27 Aug 2027</td><td>First site running on the EHR; lessons feed the later waves.</td></tr><tr class=crit><td class="ref">M5</td><td>All sites live</td><td class="ref">19 Nov 2027</td><td>Every site is on the new platform and the replacement is complete.</td></tr><tr class=crit><td class="ref">M6</td><td>Project closed</td><td class="ref">7 Jan 2028</td><td>Hypercare ends, handover and closure report accepted.</td></tr></tbody></table></div>
+        <p class="fig-note">Table 2. Major milestones. M1, M2, M5 and M6 sit on the critical path.</p>
+      </section>
+
+      <section id="critical">
+        <h2>Critical path</h2>
+        <p>The critical path runs from the charter to project closure through data migration, testing and the site rollout. It has no slack, and 13 of the 20 tasks are on it.</p>
+        <div class="chain"><span class="chip" title="Charter and scope baseline">1.1</span> <span class="arrow" aria-hidden="true">›</span> <span class="chip" title="Governance and clinical safety board">1.2</span> <span class="arrow" aria-hidden="true">›</span> <span class="chip" title="Requirements and workflow design">2.1</span> <span class="arrow" aria-hidden="true">›</span> <span class="chip" title="Vendor selection and contract">2.2</span> <span class="arrow" aria-hidden="true">›</span> <span class="chip" title="Core EHR configuration">3.1</span> <span class="arrow" aria-hidden="true">›</span> <span class="chip" title="Trial migrations and reconciliation">4.2</span> <span class="arrow" aria-hidden="true">›</span> <span class="chip" title="System and user acceptance testing">5.1</span> <span class="arrow" aria-hidden="true">›</span> <span class="chip" title="Clinical training - pilot site">6.1.1</span> <span class="arrow" aria-hidden="true">›</span> <span class="chip" title="Clinical training - remaining sites">6.1.2</span> <span class="arrow" aria-hidden="true">›</span> <span class="chip" title="Wave 1 site go-lives">7.1.2</span> <span class="arrow" aria-hidden="true">›</span> <span class="chip" title="Wave 2 site go-lives">7.1.3</span> <span class="arrow" aria-hidden="true">›</span> <span class="chip" title="Hypercare - all sites">7.2.2</span> <span class="arrow" aria-hidden="true">›</span> <span class="chip" title="Closure report and handover">7.2.3</span></div>
+        <h3>Key dependency</h3>
+        <p>User acceptance testing (5.1) cannot start until trial migrations reconcile (4.2), because clinicians must test against real migrated records. Trial migrations in turn wait for core configuration (3.1). That chain carries the whole plan into pilot training and the go-live waves.</p>
+        <h3>If a critical activity slips</h3>
+        <p>Every day lost on 4.2 moves all sites live and closure by the same day. A 10-day slip would move all sites live from 19 Nov 2027 to 3 Dec 2027 and closure to 21 Jan 2028. Keeping the go-live and hypercare teams engaged would add roughly $90,600 to $144,400. A slip beyond about 16 working days would breach the 5% schedule tolerance set in Section 1. The pilot go/no-go has only 5 days of slack, so a safety or privacy finding there would also delay the pilot.</p>
+      </section>
+
+      <section id="cost">
+        <h2>Cost and resources</h2>
+        <p>Each task cost is its duration, times the hours per day, times the units of each assigned role, times that role's hourly rate, plus any fixed cost. Longer tasks and larger teams cost more, so a schedule change is also a cost change.</p>
+        <p class="ex">Example, task 5.1: 40 days × 8 hours × $500 combined hourly rate (2 test analysts, 1 business analyst, 3 super-users, half a vendor consultant) = $160,000.</p>
+
+        <div class="costbar" role="img" aria-label="Baseline cost split by category"><span class="seg s-brand" style="flex:2100000" title="Software licences: $2,100,000"></span><span class="seg s-pas" style="flex:1225100" title="Internal team labour: $1,225,100"></span><span class="seg s-pha" style="flex:1200000" title="Hardware and devices: $1,200,000"></span><span class="seg s-rad" style="flex:590800" title="Vendor consultants: $590,800"></span><span class="seg s-lab" style="flex:452400" title="Clinical staff backfill: $452,400"></span><span class="seg s-muted" style="flex:190000" title="Other fixed costs: $190,000"></span></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Cost category</th><th class="num">Cost</th><th class="num">Share</th></tr></thead><tbody><tr><td><span class="sw s-brand"></span>Software licences</td><td class="num">$2,100,000</td><td class="num">36.5%</td></tr><tr><td><span class="sw s-pas"></span>Internal team labour</td><td class="num">$1,225,100</td><td class="num">21.3%</td></tr><tr><td><span class="sw s-pha"></span>Hardware and devices</td><td class="num">$1,200,000</td><td class="num">20.8%</td></tr><tr><td><span class="sw s-rad"></span>Vendor consultants</td><td class="num">$590,800</td><td class="num">10.3%</td></tr><tr><td><span class="sw s-lab"></span>Clinical staff backfill</td><td class="num">$452,400</td><td class="num">7.9%</td></tr><tr><td><span class="sw s-muted"></span>Other fixed costs</td><td class="num">$190,000</td><td class="num">3.3%</td></tr><tr class="tot"><td>Baseline cost</td><td class="num">$5,758,300</td><td class="num">100%</td></tr><tr><td>Contingency reserve (10%)</td><td class="num">$575,830</td><td class="num"></td></tr><tr class="tot"><td>Total project budget</td><td class="num">$6,334,130</td><td class="num"></td></tr></tbody></table></div>
+        <p class="fig-note">Table 3. Estimated project cost by category.</p>
+
+        <h3>Human resources</h3>
+        <div class="tbl-wrap"><table><thead><tr><th class="ref">Code</th><th>Role</th><th class="num">Rate/h</th><th class="num">Hours</th><th class="num">Cost</th><th>Main activities</th></tr></thead><tbody><tr><td class="ref">PM</td><td>Project Manager</td><td class="num">$95</td><td class="num">1,260</td><td class="num">$119,700</td><td>Governance, vendor selection, go-lives, closure</td></tr><tr><td class="ref">CIL</td><td>Clinical Informatics Lead</td><td class="num">$90</td><td class="num">2,120</td><td class="num">$190,800</td><td>Workflow design, configuration sign-off, reconciliation</td></tr><tr><td class="ref">BA</td><td>Business Analyst</td><td class="num">$75</td><td class="num">2,080</td><td class="num">$156,000</td><td>Requirements, procurement support, data mapping, UAT</td></tr><tr><td class="ref">IE</td><td>Integration Engineer</td><td class="num">$105</td><td class="num">1,920</td><td class="num">$201,600</td><td>Integration architecture, lab, imaging and pharmacy interfaces</td></tr><tr><td class="ref">DM</td><td>Data Migration Analyst</td><td class="num">$85</td><td class="num">1,920</td><td class="num">$163,200</td><td>Data mapping, trial migrations, cutover loads</td></tr><tr><td class="ref">QA</td><td>Test Analyst</td><td class="num">$80</td><td class="num">1,420</td><td class="num">$113,600</td><td>Reconciliation, UAT, go-live checks</td></tr><tr><td class="ref">CSO</td><td>Clinical Safety Officer</td><td class="num">$100</td><td class="num">240</td><td class="num">$24,000</td><td>Clinical safety board and safety assessment</td></tr><tr><td class="ref">PSO</td><td>Privacy &amp; Security Officer</td><td class="num">$100</td><td class="num">350</td><td class="num">$35,000</td><td>Privacy and security assessment, architecture review</td></tr><tr><td class="ref">TS</td><td>Training Specialist</td><td class="num">$70</td><td class="num">3,160</td><td class="num">$221,200</td><td>Training, super-user support, hypercare</td></tr><tr><td class="ref">SU</td><td>Clinical Super-users (backfill)</td><td class="num">$65</td><td class="num">6,960</td><td class="num">$452,400</td><td>Workflow design, UAT, training, go-live support</td></tr><tr><td class="ref">VC</td><td>EHR Vendor Consultant</td><td class="num">$140</td><td class="num">4,220</td><td class="num">$590,800</td><td>Configuration, interfaces, go-live and hypercare support</td></tr></tbody></table></div>
+        <p class="fig-note">Table 4. Resource pool with planning rates. Hours and cost are totals across all tasks.</p>
+
+        <h3>Key cost assumptions</h3>
+        <ul class="plain">
+          <li>Rates are fully loaded hourly rates, with 8-hour days and no public holidays.</li>
+          <li>Clinical super-users are costed as backfill for their normal clinical duties.</li>
+          <li>Licences are first-year costs, and later years fall to operations.</li>
+          <li>Devices are bought per go-live wave, and no inflation is applied.</li>
+          <li>The contingency reserve sits outside task budgets. All figures are group planning estimates, not vendor quotes.</li>
+        </ul>
+      </section>
+      </article>
+
+      <footer>
+        Group <span class="ph">[XX]</span> · <span class="ph">[Unit code]</span> · <span class="ph">[Member names]</span>
+      </footer>
+    </div>
+  </main>
+</div>
+<script>
+(function () {
+  if (!('IntersectionObserver' in window)) return;
+  var items = [].slice.call(document.querySelectorAll('.nav > li[data-sec]'));
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      items.forEach(function (li) {
+        var on = li.getAttribute('data-sec') === en.target.id;
+        li.classList.toggle('active', on);
+        var a = li.querySelector('.nav-link');
+        if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+      });
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+  [].slice.call(document.querySelectorAll('article[id^="s"]')).forEach(function (a) { io.observe(a); });
+})();
+</script>
+</body>
+</html>
